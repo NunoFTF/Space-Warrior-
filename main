@@ -1,0 +1,274 @@
+include emu8086.inc
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;MENU INICIAL;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+menu:
+    
+    
+    
+    lea dx, menutexto
+    mov ah, 9
+    int 21h  
+    
+    mov ah, 7
+    int 21h
+    
+    cmp al, '2'
+    je jogo
+    
+    cmp al, '1'
+    je controls
+    
+    jmp repetirmenu
+    
+controls:
+    
+    call limpar
+    
+    lea dx, controlostexto
+    mov ah, 9
+    int 21h
+      
+premirtecla4:
+
+ 
+    mov ah, 7
+    int 21h
+    
+    cmp al, '3'
+    je repetirmenu
+    jne premirtecla4 
+    
+repetirmenu:
+
+    call limpar
+    
+    jmp menu
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;INICIO DO JOGO;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    
+    
+jogo:
+    call limpar                     ;limpar o menu
+    
+    gotoxy posicaox,posicaoy        ;Posicao inicial da nave
+    mov ah, 2                       ;
+    mov dl, 127                     ;
+    int 21h                         ;
+    
+    
+    
+criarmonstro:                       
+    
+    mov ah, 2ch                     ;obter hora do computador para criar uma posicao aleatoria ao monstro
+    int 21h 
+                                    
+                                   
+    mov monstroy, dl                ;y sao os centesimos de segundo
+    mov monstrox, dh                ;x sao os segundos
+    
+    cmp monstroy, 18                ;comparar o x com 18 para o alvo nao ficar abaixo da nave
+    
+    jae criarmonstro                
+    
+    gotoxy monstrox, monstroy       ;escrever o caracter que representa o monstro
+    
+    mov ah, 2
+    mov dl, 219
+    int 21h
+
+repetir:
+    mov cx, 19                      ;cx a 19 para o loop da bala, 19 e a quantidade de posicoes de y que ela pode percorrer no maximo
+    
+    mov ah, 7                       ;ler a tecla
+    int 21h  
+    
+    cmp al, 32                      ;clicou no espaco?
+    je tiro
+                                    
+    cmp al, 97                      ;clicou no A?
+    je a
+
+    cmp al, 100                     ;clicou no D?
+    je d
+    
+    cmp al, 112
+    je repetirmenu
+    jne repetir 
+    
+
+   
+a:
+    mov dh, posicaoy                ; gotoxy posicaox, posicaoy
+	mov dl, posicaox                ;
+	mov bh, 0                       ;
+	mov ah, 2                       ;
+	int 10h                         ;
+	
+    mov ah, 2                       ;limpar o rasto
+    mov dl, ' '                     ;
+    int 21h                         ;
+    
+    dec posicaox                    ;diminuir a posicaox para escrever a esquerda
+    
+    mov dh, posicaoy                ; gotoxy posicaox, posicaoy
+	mov dl, posicaox                ;
+	mov bh, 0                       ;
+	mov ah, 2                       ;
+	int 10h                         ;
+	
+    mov ah, 2                       ;desenhar nova nave
+    mov dl, 127                     ;
+    int 21h                         ;
+
+    jmp repetir 
+
+d:
+    mov dh, posicaoy                ; gotoxy posicaox, posicaoy
+	mov dl, posicaox                ;
+	mov bh, 0                       ;
+	mov ah, 2                       ;
+	int 10h                         ;
+	                         
+    mov ah, 2                       ;limpar o rasto
+    mov dl, ' '                     ;
+    int 21h                         ;
+    
+    inc posicaox                    ;aumentar a posicaox para escrever a direita
+    
+    mov dh, posicaoy                ; gotoxy posicaox, posicaoy
+	mov dl, posicaox                ;
+	mov bh, 0                       ;
+	mov ah, 2                       ;
+	int 10h                         ;
+	
+    mov ah, 2                       ;desenhar nova nave
+    mov dl, 127                     ;
+    int 21h                         ;
+
+    jmp repetir 
+
+tiro:
+                                    
+    mov bl, posicaox                ;copiar a posicao da nave para a bala
+    mov bh, posicaoy                ;
+    mov balax, bl                   ;
+    mov balay, bh 
+    
+    jmp saltarprimeirabala                             
+    
+tiroloop:
+                           
+    mov dh, balay                   ;gotoxy balax,balay
+	mov dl, balax                   ;
+	mov bh, 0                       ;
+	mov ah, 2                       ;
+	int 10h                         ;
+    
+    
+    mov ah, 2                       ;limpar o rasto
+    mov dl, ' '
+    int 21h  
+    
+saltarprimeirabala:
+
+    mov dl, monstroy
+    
+    cmp balay, dl
+    je  cmpx
+
+continuar:
+    
+    dec balay
+     
+                           ;gotoxy balax,balay
+    mov dh, balay          ;
+	mov dl, balax          ;
+	mov bh, 0              ;
+	mov ah, 2              ;
+	int 10h 
+	               
+    mov ah, 2
+    mov dl, 215
+    int 21h 
+    
+    loop tiroloop
+                      
+    jmp repetir
+    
+cmpx:
+    
+    mov dh, monstrox
+    
+    cmp dh, balax
+    jne  continuar
+                      
+animacao:
+    gotoxy monstrox, monstroy
+    mov ah, 2
+    mov dl, 178
+    int 21h
+    gotoxy monstrox, monstroy 
+    mov ah, 2
+    mov dl, 177
+    int 21h
+    gotoxy monstrox, monstroy
+    mov ah, 2
+    mov dl, 176
+    int 21h
+    gotoxy monstrox, monstroy
+    mov ah, 2
+    mov dl, ' '
+    int 21h
+
+    jmp criarmonstro
+    
+limpar:
+    
+    mov ah,0
+    mov al,3
+    int 10h
+    
+    ret 
+    
+    
+  ret  
+
+
+posicaox db 40
+posicaoy db 18 
+balax db 0
+balay db 0 
+monstrox db 0
+monstroy db 0
+
+
+menutexto db '************************************BEM VINDO*******************************',13,10
+db 13,10
+db ' 1. CONTROLOS', 13,10
+db 13,10
+db ' 2. JOGO DE TIRO ',13,10
+db 13,10 
+db '$'
+
+
+
+
+controlostexto db 13,10
+db ' -----------------------------------------',13,10
+db ' |                                       |',13,10
+db ' | ---------Jogo de tiro:---------       |',13,10
+db ' |                                       |',13,10
+db ' | Tecla A - mover para a esquerda       |',13,10
+db ' |                                       |',13,10
+db ' | Tecla D - mover para a direita        |',13,10
+db ' |                                       |',13,10
+db ' | Tecla P   - voltar ao menu            |',13,10
+db ' |                                       |',13,10
+db ' |                                       |',13,10
+db ' |                                       |',13,10
+db ' |                                       |',13,10
+db ' | 3. SAIR                               |',13,10
+db ' |                                       |',13,10
+db ' -----------------------------------------', '$'  
